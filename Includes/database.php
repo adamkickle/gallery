@@ -82,6 +82,18 @@ public function last_query(){
   function escape($string) {
     return $this->connection->escape_string($string);
   }
+
+  // **************** perform a query **********************
+
+    public function insert($sql){
+
+              $db = $this->connection;
+              $stmt = $db->prepare($sql);
+              $stmt->execute(); 
+
+    }
+
+
 }
 
 $Database = new database();

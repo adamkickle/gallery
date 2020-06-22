@@ -1,10 +1,10 @@
 <?php
      
  require_once('database.php');   
- require_once('database_object.php');   
+ require_once('init.php');   
 
 
-class User extends DatabaseObject{
+class User{
     protected static $table_name = "users";
     public $id;
     public $username ='def name';
@@ -24,19 +24,12 @@ class User extends DatabaseObject{
 public static function find_by_id($id=0){
     global $database;
     $database = new database();
-        //$result_set = $database->query("select * from users where id ={$id} limit 1");
-        $result_array = self::find_by_sql("select * from  ".self::$table_name."  where id ={$id} limit 1");
-      //  $fuond_user = mysqli_fetch_array($result_set);
-       // $fuond_user = $database->fetch_array($result_set);
-
        
-       $fuond = $database->fetch_array($result_array);
+        $result_array = self::find_by_sql("select * from  ".self::$table_name."  where id ={$id} limit 1");
+      //var_dump($result_array);
+       //$fuond = $database->fetch_array($result_array);
         
-     /* if(!$fuond){
-            die('no such user');
-        }else{
-            return $fuond;
-        }*/
+    
 
         return !empty($result_array) ? array_shift($result_array) : false;
 
@@ -72,7 +65,6 @@ return !empty($result_array) ? array_shift($result_array) : false;
 }
 
 
-//+++++++++++++++++
 
 //=================
 
@@ -88,11 +80,11 @@ public function full_name(){
 //=================
 private static function instantiate($record){
  $object = new self;
-//  $object->id = $record['id'];
-//  $object->username = $record['username'];
-//  $object->password = $record['password'];
-//  $object->last_name = $record['last_name'];
-//  $object->first_name = $record['first_name'];
+/*  $object->id = $record['id'];
+  $object->username = $record['username'];
+ $object->password = $record['password'];
+  $object->last_name = $record['last_name'];
+  $object->first_name = $record['first_name']; */
 
 //  more dynamic, short-form approach:
     foreach($record as $attribute=>$value){
@@ -109,8 +101,55 @@ private function has_attribute($attribute){
 
     return array_key_exists($attribute, $object_vars); // return bool
 }
+// insert  anew user 
+
+
+public function create($arr){
+global $db;
+// $db = $Database->connection;
+$stmt = $db->prepare('insert into '.self::$table_name.' (username,password,first_name, last_name) values (?, ?, ?,?)');
+
+ $check_success= $stmt->execute([ $arr['username'],$arr['password'],  $arr['first_name'],$arr['last_name']]);
+//write into the logfile
+ if($check_success){
+        log_action('new user', "{$arr['first_name']} registered.");
+     
+    }else{
+        log_action('new user failed', "{$arr['first_name']} to register.");  
+    }
+}
+
+
+// update
+public function update($arr,$id=1){
+    global $db;
+    // $db = $Database->connection;
+    $sql = "UPDATE ".self::$table_name." SET  username = :username
+                             
+                                where id = '$id'";
+    $stmt = $db->prepare($sql);                                  
+    $stmt->bindParam(':username', $arr['username']);     
+    $stmt->execute(); 
+    }
+
+
+// delete a user from database
+
+function delete($id){
+    global $db;
+
+    $stmt = $db->prepare("delete from  ".self::$table_name."  where
+     id = :id limit 1");
+
+$stmt->bindValue(':id', $id);
+$stmt->execute();
 
 }
+
+}
+
+
+
 
 
 
